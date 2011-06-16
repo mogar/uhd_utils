@@ -181,7 +181,7 @@ class sense_path(gr.hier_block2):
                           help="time to dwell (in seconds) at a given frequncy [default=%default]")
         normal.add_option("-F", "--fft-size", type="int", default=1024,
                           help="specify number of FFT bins [default=%default]")
-        normal.add_option("", "--threshold", type="eng_float", default=-70, 
+        normal.add_option("", "--threshold", type="eng_float", default=-54, 
         				  help="set detection threshold [default=%default]")
         expert.add_option("", "--real-time", action="store_true", default=False,
                           help="Attempt to enable real-time scheduling")
