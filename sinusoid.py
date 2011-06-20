@@ -26,6 +26,9 @@ from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 from gnuradio import uhd
 
+from grc_gnuradio import blks2 as grc_blks2
+import time
+
 class my_top_block(gr.top_block):
 
     def __init__(self):
@@ -50,15 +53,26 @@ class my_top_block(gr.top_block):
         ampl = options.amp
 
         src0 = gr.sig_source_c (sample_rate, gr.GR_SIN_WAVE, options.sin_freq, ampl)
-        dst =  uhd.usrp_sink(device_addr="", io_type=uhd.io_type.COMPLEX_FLOAT32, num_channels=1)
-        dst.set_samp_rate(sample_rate) 
-        dst.set_center_freq(options.freq, 0)
-        dst.set_gain(dst.get_gain_range().stop()/2, 0)
+        self.dst =  uhd.usrp_sink(device_addr="", io_type=uhd.io_type.COMPLEX_FLOAT32, num_channels=1)
+        self.dst.set_samp_rate(sample_rate) 
+        self.dst.set_center_freq(options.freq, 0)
+        self.dst.set_gain(self.dst.get_gain_range().stop()/2, 0)
 
-        self.connect (src0, dst)
+        self.connect (src0, self.dst)
 
 if __name__ == '__main__':
-    try:
-        my_top_block().run()
-    except KeyboardInterrupt:
-        pass
+    tb = my_top_block()
+    tb.start()
+    
+    list = []
+    i = 0
+    while i < 400:
+    	list.append(time.time()) 
+    	tb.dst.set_samp_rate(2000000)
+    	list.append(time.time())
+    	tb.dst.set_samp_rate(5882353)
+    	i += 1
+    for item in list:
+    	print item
+    tb.stop()
+    tb.wait()
