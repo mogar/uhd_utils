@@ -42,7 +42,7 @@ class my_top_block(gr.top_block):
         parser.add_option("", "--sin_freq", type="eng_float", default=100000,
                           help="set sinusoid frequency [default=%default]")
         parser.add_option("-a", "--amp", type="eng_float", default=.8,
-		                  help="set sinusoid amplitude, 0<=amp<=1 [default=%default]")
+                          help="set sinusoid amplitude, 0<=amp<=1 [default=%default]")
                           
         (options, args) = parser.parse_args ()
         if len(args) != 0:
@@ -67,12 +67,12 @@ if __name__ == '__main__':
     list = []
     i = 0
     while i < 400:
-    	list.append(time.time()) 
-    	tb.dst.set_samp_rate(2000000)
-    	list.append(time.time())
-    	tb.dst.set_samp_rate(5882353)
-    	i += 1
+        list.append(time.time()) 
+        tb.dst.set_samp_rate(2000000)
+        list.append(time.time())
+        tb.dst.set_samp_rate(5882353)
+        i += 1
     for item in list:
-    	print item
+        print item
     tb.stop()
     tb.wait()

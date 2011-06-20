@@ -75,9 +75,9 @@ class sense_path(gr.hier_block2):
 
     def __init__(self, usrp_rate, tuner_callback, options):
         gr.hier_block2.__init__(self, "sense_path",
-				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
-				gr.io_signature(0, 0, 0)) # Output signature
-		
+                gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
+                gr.io_signature(0, 0, 0)) # Output signature
+        
         self.usrp_rate = usrp_rate
         self.usrp_tune = tuner_callback
 
@@ -119,7 +119,7 @@ class sense_path(gr.hier_block2):
         # FIXME the log10 primitive is dog slow
         log = gr.nlog10_ff(10, self.fft_size,
                            -20*math.log10(self.fft_size)-10*math.log10(power/self.fft_size))
-		
+        
         # Set the freq_step to 75% of the actual data throughput.
         # This allows us to discard the bins on both ends of the spectrum.
 
@@ -148,20 +148,20 @@ class sense_path(gr.hier_block2):
         target_freq = self.next_freq
         self.next_freq = self.next_freq + self.freq_step
         if self.next_freq >= self.max_center_freq:
-        	self.next_freq = self.min_center_freq
-        	
+            self.next_freq = self.min_center_freq
+            
         if not self.set_freq(target_freq):
-        	print "Failed to set frequency to", target_freq
-        		
+            print "Failed to set frequency to", target_freq
+                
         return target_freq
-        	
+            
     def set_freq(self, target_freq):
         """
         Set the center frequency we're interested in.
-        	
+            
         @param target_freq: frequency in Hz
         @rypte: bool
-        	
+            
         Tuning is a two step process.  First we ask the front-end to
         tune as close to the desired frequency as it can.  Then we use
         the result of that operation and our target_frequency to
@@ -182,11 +182,11 @@ class sense_path(gr.hier_block2):
         normal.add_option("-F", "--fft-size", type="int", default=1024,
                           help="specify number of FFT bins [default=%default]")
         normal.add_option("", "--threshold", type="eng_float", default=-54, 
-        				  help="set detection threshold [default=%default]")
+                          help="set detection threshold [default=%default]")
         expert.add_option("", "--real-time", action="store_true", default=False,
                           help="Attempt to enable real-time scheduling")
         normal.add_option("", "--num-tests", type="intx", default=1,
-        				  help="set the number of times to test the frequency band [default=%default]")
+                          help="set the number of times to test the frequency band [default=%default]")
         normal.add_option("", "--start-freq", type="eng_float", default="631M",
                           help="set the start of the frequency band to sense over [default=%default]")
         normal.add_option("", "--end-freq", type="eng_float", default="671M",
