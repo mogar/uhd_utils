@@ -99,6 +99,8 @@ class my_top_block(gr.top_block):
         #updated 2011 May 27, MR
         parser.add_option("-s", "--samp_rate", type="intx", default=6000000,
         				  help="set sample rate to SAMP_RATE [default=%default]")
+        parser.add_option("", "--chan-bandwidth", type="intx", default=6000000,
+        				  help="set channel bw [default=%default]")
         #parser.add_option("-d", "--decim", type="intx", default=16,
         #                  help="set decimation to DECIM [default=%default]")
         parser.add_option("", "--real-time", action="store_true", default=False,
@@ -205,7 +207,7 @@ class my_top_block(gr.top_block):
 
         #changed on 2011 May 31, MR -- maybe change back at some point
         #self.freq_step = 0.75 * self.usrp_rate
-        self.freq_step = options.samp_rate
+        self.freq_step = options.chan_bandwidth
         self.min_center_freq = self.min_freq + self.freq_step/2
         nsteps = math.ceil((self.max_freq - self.min_freq) / self.freq_step)
         self.max_center_freq = self.min_center_freq + (nsteps * self.freq_step)
