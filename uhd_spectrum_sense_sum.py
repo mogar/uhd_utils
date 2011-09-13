@@ -33,6 +33,8 @@ import math
 import struct
 import time
 
+import os
+
 
 class tune(gr.feval_dd):
     """
@@ -96,7 +98,7 @@ class my_top_block(gr.top_block):
                           help="specify number of FFT bins [default=%default]")
         #updated 2011 May 27, MR
         parser.add_option("-s", "--samp_rate", type="intx", default=6000000,
-                          help="set sample rate to SAMP_RATE [default=%default]")
+        				  help="set sample rate to SAMP_RATE [default=%default]")
         #parser.add_option("-d", "--decim", type="intx", default=16,
         #                  help="set decimation to DECIM [default=%default]")
         parser.add_option("", "--real-time", action="store_true", default=False,
@@ -107,9 +109,11 @@ class my_top_block(gr.top_block):
         #                  help="specify number of fast usb blocks [default=%default]")
         #options added 2011 May 31, MR
         parser.add_option("", "--threshold", type="eng_float", default=-70, 
-                          help="set detection threshold [default=%default]")
+        				  help="set detection threshold [default=%default]")
         parser.add_option("", "--num-tests", type="intx", default=200,
-                          help="set the number of times to test the frequency band [default=%default]")
+        				  help="set the number of times to test the frequency band [default=%default]")
+        parser.add_option("", "--log-file", action="store_true", default=False,
+                          help="log output to a file")
 
         (options, args) = parser.parse_args()
         if len(args) != 2:
@@ -123,7 +127,11 @@ class my_top_block(gr.top_block):
         
         self.min_freq = eng_notation.str_to_num(args[0])
         self.max_freq = eng_notation.str_to_num(args[1])
-
+        
+        self.log_file = options.log_file
+        
+        self.num_channels = int((self.max_freq - self.min_freq)/self.samp_rate) + 2
+        
         if self.min_freq > self.max_freq:
             self.min_freq, self.max_freq = self.max_freq, self.min_freq   # swap them
             
@@ -155,7 +163,7 @@ class my_top_block(gr.top_block):
         #            options.fusb_nblocks    = gr.prefs().get_long('fusb', 'nblocks', 16)
     
         #print "fusb_block_size =", options.fusb_block_size
-        #print "fusb_nblocks    =", options.fusb_nblocks
+	    #print "fusb_nblocks    =", options.fusb_nblocks
 
         # build graph
         
@@ -191,13 +199,13 @@ class my_top_block(gr.top_block):
         # FIXME the log10 primitive is dog slow
         log = gr.nlog10_ff(10, self.fft_size,
                            -20*math.log10(self.fft_size)-10*math.log10(power/self.fft_size))
-        
+		
         # Set the freq_step to 75% of the actual data throughput.
         # This allows us to discard the bins on both ends of the spectrum.
 
         #changed on 2011 May 31, MR -- maybe change back at some point
         #self.freq_step = 0.75 * self.usrp_rate
-        self.freq_step = self.usrp_rate
+        self.freq_step = options.samp_rate
         self.min_center_freq = self.min_freq + self.freq_step/2
         nsteps = math.ceil((self.max_freq - self.min_freq) / self.freq_step)
         self.max_center_freq = self.min_center_freq + (nsteps * self.freq_step)
@@ -230,20 +238,20 @@ class my_top_block(gr.top_block):
         target_freq = self.next_freq
         self.next_freq = self.next_freq + self.freq_step
         if self.next_freq >= self.max_center_freq:
-            self.next_freq = self.min_center_freq
-            
+        	self.next_freq = self.min_center_freq
+        	
         if not self.set_freq(target_freq):
-            print "Failed to set frequency to", target_freq
-                
+        	print "Failed to set frequency to", target_freq
+        		
         return target_freq
-            
+        	
     def set_freq(self, target_freq):
         """
         Set the center frequency we're interested in.
-            
+        	
         @param target_freq: frequency in Hz
         @rypte: bool
-            
+        	
         Tuning is a two step process.  First we ask the front-end to
         tune as close to the desired frequency as it can.  Then we use
         the result of that operation and our target_frequency to
@@ -252,7 +260,7 @@ class my_top_block(gr.top_block):
         #updated 2011 May 31, MR
         #return self.u.tune(0, self.subdev, target_freq)
         return self.u.set_center_freq(target_freq, 0)
-            
+        	
     def set_gain(self, gain):
         #updated 2011 May 31, MR
         #self.subdev.set_gain(gain)
@@ -260,49 +268,64 @@ class my_top_block(gr.top_block):
 
 
 def main_loop(tb):
-    filename = "spectrum_sense_exp_" + time.strftime('%y%m%d_%H%M%S') + ".csv"
-    f = open(filename, 'w')
-    f.write("detecting on %s BW channels between " %(tb.samp_rate))
-    f.write("%s and " %(tb.min_freq))
-    f.write("%s\n" %(tb.max_freq))
-    f.close()
-    i = 0
-    mywindow = window.blackmanharris(tb.fft_size)
-    power = 0
-    for tap in mywindow:
-        power += tap*tap
-        
-    k = -20*math.log10(tb.fft_size)-10*math.log10(power/tb.fft_size)
-    
-    while i < 9*tb.num_tests:
-        i = i+1
-        # Get the next message sent from the C++ code (blocking call).
-        # It contains the center frequency and the mag squared of the fft
-        m = parse_msg(tb.msgq.delete_head())
-        
-        #fft_sum_db = 20*math.log10(sum(m.data)/m.vlen)
-        temp_list = []
-        for item in m.data:
-            temp_list.append(10*math.log10(item) + k)
-        fft_sum_db = sum(temp_list)/m.vlen
-        f = open(filename, 'a')
-        if fft_sum_db > tb.threshold:
-            f.write("1,")
-        else:
-            f.write("0,")
-        #f.write(str(m.center_freq))
-        #f.write(", ")
-        #f.write(str(fft_sum_db))
-        #f.write("\n")
-        print m.center_freq, fft_sum_db
+	if tb.log_file:
+		filename = "spectrum_sense_exp_" + time.strftime('%y%m%d_%H%M%S') + ".csv"
+		f = open(filename, 'w')
+		f.write("detecting on %s BW channels between " %(tb.samp_rate))
+		f.write("%s and " %(tb.min_freq))
+		f.write("%s\n" %(tb.max_freq))
+		f.close()
+	i = 0
+	mywindow = window.blackmanharris(tb.fft_size)
+	power = 0
+	for tap in mywindow:
+		power += tap*tap
+		
+	k = -20*math.log10(tb.fft_size)-10*math.log10(power/tb.fft_size)
+	
+	while i < tb.num_tests or tb.num_tests == 0:
+		i = (i+1)
+				
+		# Get the next message sent from the C++ code (blocking call).
+		# It contains the center frequency and the mag squared of the fft
+		m = parse_msg(tb.msgq.delete_head())
+		
+		#fft_sum_db = 20*math.log10(sum(m.data)/m.vlen)
+		temp_list = []
+		for item in m.data:
+			temp_list.append(10*math.log10(item) + k)
+		fft_sum_db = sum(temp_list)/m.vlen
+		
+		
+		if tb.log_file:
+			f = open(filename, 'a')
+			if fft_sum_db > tb.threshold:
+				f.write("1,")
+			else:
+				f.write("0,")
+			#f.write(str(m.center_freq))
+			#f.write(", ")
+			#f.write(str(fft_sum_db))
+			#f.write("\n")
+			if m.center_freq >= tb.max_center_freq - tb.freq_step:
+				f.write("\n")
+			#	break
+			f.close()
+			
+		if not tb.log_file and m.center_freq == tb.min_center_freq:
+				os.system("clear")
+				#tb.next_freq = tb.min_center_freq
+				#tb.msgq.flush()
+		
+		print m.center_freq, fft_sum_db
 
-        
-        if m.center_freq >= tb.max_center_freq - tb.freq_step:
-            f.write("\n")
-        #    break
-        f.close()
-    
-    #f.close()
+		if not tb.log_file and m.center_freq >= tb.max_center_freq - tb.freq_step:
+				time.sleep(.5)
+				tb.next_freq = tb.min_center_freq
+				tb.msgq.flush()
+
+	
+	#f.close()
 
     
 if __name__ == '__main__':
