@@ -64,7 +64,8 @@ if __name__ == '__main__':
     tb = my_top_block()    
     try:
         tb.start()              # start executing flow graph in another thread...
-        
+        while 1:
+        	pass
     except KeyboardInterrupt:
         tb.stop()
         tb.wait()
