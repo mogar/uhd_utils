@@ -61,18 +61,10 @@ class my_top_block(gr.top_block):
         self.connect (src0, self.dst)
 
 if __name__ == '__main__':
-    tb = my_top_block()
-    tb.start()
-    
-    list = []
-    i = 0
-    while i < 400:
-        list.append(time.time()) 
-        tb.dst.set_samp_rate(2000000)
-        list.append(time.time())
-        tb.dst.set_samp_rate(5882353)
-        i += 1
-    for item in list:
-        print item
-    tb.stop()
-    tb.wait()
+    tb = my_top_block()    
+    try:
+        tb.start()              # start executing flow graph in another thread...
+        
+    except KeyboardInterrupt:
+        tb.stop()
+        tb.wait()
