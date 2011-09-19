@@ -51,6 +51,7 @@ class my_top_block(gr.top_block):
         # Set up USRP sink; also adjusts interp, and bitrate
         self._setup_usrp_sink()
 
+        sample_rate = 2000000
         src0 = gr.sig_source_c (sample_rate, gr.GR_SIN_WAVE, self.sin_freq, self.amp)
         self.connect (src0, self.u)
         
@@ -201,7 +202,7 @@ def main():
     current_chan = 0
     while n < nbytes:
         if time.clock() - last_change < options.channel_interval:
-            pass
+            pass 
         else:
             
             #change channels
