@@ -154,12 +154,6 @@ def main():
 
     parser = OptionParser(option_class=eng_option, conflict_handler="resolve")
     expert_grp = parser.add_option_group("Expert")
-    parser.add_option("-s", "--size", type="eng_float", default=400,
-                      help="set packet size [default=%default]")
-    parser.add_option("-M", "--megabytes", type="eng_float", default=1.0,
-                      help="set megabytes to transmit [default=%default]")
-    parser.add_option("","--discontinuous", action="store_true", default=False,
-                      help="enable discontinuous mode")
     parser.add_option("","--gain", type="eng_float", default=13,
                       help="set transmitter gain [default=%default]")
     parser.add_option("","--channel-interval", type="eng_float", default=5,
@@ -177,10 +171,6 @@ def main():
      
                       
     my_top_block.add_options(parser, expert_grp)
-    transmit_path.add_options(parser, expert_grp)
-    blks2.ofdm_mod.add_options(parser, expert_grp)
-    blks2.ofdm_demod.add_options(parser, expert_grp)
-    #fusb_options.add_options(expert_grp)
 
     (options, args) = parser.parse_args ()
 
