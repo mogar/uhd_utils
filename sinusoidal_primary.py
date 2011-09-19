@@ -190,11 +190,6 @@ def main():
 
     tb.start()                       # start flow graph
     
-    # generate and send packets
-    nbytes = int(1e6 * options.megabytes)
-    n = 0
-    pktno = 0
-    pkt_size = int(options.size)
 
     #timing parameters
     last_change = time.clock()
