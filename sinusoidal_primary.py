@@ -169,6 +169,8 @@ def main():
                           help="enable random frequency selection")
     parser.add_option("", "--channel_rate", type="eng_float", default=6e6,
                           help="Set bandwidth of an expected channel [default=%default]")
+    parser.add_option("", "--total-time", type="eng_float", default=50,
+                          help="time to run in seconds [default=%default]")
      
                       
     my_top_block.add_options(parser, expert_grp)
@@ -200,7 +202,8 @@ def main():
     print "\nstarting frequency: ", options.tx_freq, " at time: ", time.strftime("%X")
     
     current_chan = 0
-    while n < nbytes:
+    start_time = time.clock()
+    while time.clock() - start_time < options.total_time * 2:
         if time.clock() - last_change < options.channel_interval:
             pass 
         else:
