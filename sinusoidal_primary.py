@@ -201,13 +201,7 @@ def main():
     current_chan = 0
     while n < nbytes:
         if time.clock() - last_change < options.channel_interval:
-            #pktno % 65535 to account for sending very large amounts of data
-            send_pkt(struct.pack('!H', pktno % 65535) + (pkt_size - 2) * chr(pktno & 0xff))
-            n += pkt_size
-            sys.stderr.write('.')
-            if options.discontinuous and pktno % 5 == 1:
-                time.sleep(1)
-            pktno += 1
+            pass
         else:
             
             #change channels
@@ -228,7 +222,6 @@ def main():
             print "\nchanging frequencies to ", new_freq, " at time ", time.strftime("%X")
             tb.set_freq(new_freq)
         
-    send_pkt(eof=True)
     tb.wait()                       # wait for it to finish
 
 if __name__ == '__main__':
